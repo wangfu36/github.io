@@ -5,35 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>22.Do 临时邮箱池 · 实时取号 + 收件箱</title>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-        }
+        * { box-sizing: border-box; user-select: none; }
         body {
-            font-family: system-ui, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
+            font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
             background: #f1f5f9;
             margin: 0;
             min-height: 100vh;
             padding: 24px 20px;
         }
-        .container {
-            max-width: 1100px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-        /* 卡片通用样式 */
+        .container { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
         .card {
             background: white;
             border-radius: 1.8rem;
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
             padding: 1.6rem 1.8rem 2rem;
-            transition: all 0.2s;
         }
-        .email-panel {
-            text-align: center;
-        }
+        .email-panel { text-align: center; }
         h1 {
             font-size: 1.9rem;
             font-weight: 700;
@@ -44,41 +31,22 @@
             justify-content: center;
             gap: 10px;
         }
-        h1::before {
-            content: "📧";
-            font-size: 1.8rem;
-        }
-        .sub {
-            color: #475569;
-            margin-bottom: 1.2rem;
-            font-size: 0.85rem;
-            border-bottom: 1px solid #e2e8f0;
-            display: inline-block;
-            padding-bottom: 6px;
-        }
+        h1::before { content: "📧"; font-size: 1.8rem; }
+        .sub { color: #475569; margin-bottom: 1.2rem; font-size: 0.85rem; border-bottom: 1px solid #e2e8f0; display: inline-block; padding-bottom: 6px; }
         #emailDisplay {
             background: #f8fafc;
             font-size: 1.4rem;
             font-weight: 600;
-            font-family: 'SF Mono', 'Fira Code', monospace;
-            margin: 1rem 0 1rem;
+            font-family: monospace;
+            margin: 1rem 0;
             padding: 1rem 1.2rem;
             border: 2px solid #cbd5e1;
             border-radius: 60px;
-            display: inline-block;
             width: 100%;
             word-break: break-all;
-            color: #0f172a;
-            background: #ffffff;
-            box-shadow: inset 0 1px 2px #00000008, 0 1px 2px #fff;
+            background: white;
         }
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            justify-content: center;
-            margin: 12px 0 8px;
-        }
+        .button-group { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; margin: 12px 0 8px; }
         button {
             font-size: 1rem;
             font-weight: 600;
@@ -88,31 +56,15 @@
             color: white;
             border: none;
             border-radius: 60px;
-            transition: 0.2s ease;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            transition: 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            justify-content: center;
         }
         button:active { transform: scale(0.97); }
-        button:disabled {
-            background: #94a3b8;
-            cursor: not-allowed;
-            opacity: 0.7;
-            transform: none;
-        }
-        .btn-secondary {
-            background: #3b82f6;
-        }
-        .btn-secondary:active { background: #2563eb; }
-        .btn-outline {
-            background: white;
-            color: #1e293b;
-            border: 1px solid #cbd5e1;
-            box-shadow: none;
-        }
-        .btn-outline:active { background: #f1f5f9; transform: scale(0.97);}
+        button:disabled { background: #94a3b8; cursor: not-allowed; opacity: 0.7; }
+        .btn-secondary { background: #3b82f6; }
+        .btn-outline { background: white; color: #1e293b; border: 1px solid #cbd5e1; }
         #msg {
             margin-top: 16px;
             font-size: 0.85rem;
@@ -121,49 +73,13 @@
             padding: 6px 18px;
             border-radius: 40px;
             font-weight: 500;
-            color: #2c3e66;
         }
-        /* 收件箱区域 */
-        .inbox-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            flex-wrap: wrap;
-            margin-bottom: 1.2rem;
-            border-bottom: 2px solid #eef2ff;
-            padding-bottom: 0.75rem;
-        }
-        .inbox-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .inbox-actions {
-            display: flex;
-            gap: 12px;
-        }
-        .refresh-btn {
-            background: #f1f5f9;
-            color: #1e293b;
-            padding: 8px 16px;
-            font-size: 0.8rem;
-            box-shadow: none;
-        }
-        .auto-badge {
-            background: #e6f7ec;
-            font-size: 0.7rem;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-weight: 500;
-            color: #2b6e3c;
-        }
-        .email-list {
-            max-height: 460px;
-            overflow-y: auto;
-            border-radius: 1rem;
-        }
+        .inbox-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 1.2rem; border-bottom: 2px solid #eef2ff; padding-bottom: 0.75rem; }
+        .inbox-title { font-size: 1.4rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .inbox-actions { display: flex; gap: 12px; }
+        .refresh-btn { background: #f1f5f9; color: #1e293b; padding: 8px 16px; font-size: 0.8rem; }
+        .auto-badge { background: #e6f7ec; font-size: 0.7rem; padding: 4px 12px; border-radius: 30px; }
+        .email-list { max-height: 460px; overflow-y: auto; border-radius: 1rem; }
         .email-item {
             background: #fefefe;
             border: 1px solid #e2e8f0;
@@ -171,52 +87,17 @@
             padding: 12px 16px;
             margin-bottom: 10px;
             cursor: pointer;
-            transition: 0.1s;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 10px;
         }
-        .email-item:hover {
-            background: #fafcff;
-            border-color: #94a3b8;
-        }
-        .email-info {
-            flex: 3;
-            min-width: 180px;
-        }
-        .email-subject {
-            font-weight: 600;
-            color: #0f172a;
-            word-break: break-word;
-        }
-        .email-from {
-            font-size: 0.75rem;
-            color: #475569;
-            margin-top: 4px;
-        }
-        .email-time {
-            font-size: 0.7rem;
-            color: #64748b;
-            white-space: nowrap;
-        }
-        .detail-btn {
-            background: #eef2ff;
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 500;
-            color: #2563eb;
-        }
-        .empty-inbox {
-            text-align: center;
-            padding: 48px 20px;
-            background: #fafcff;
-            border-radius: 1.5rem;
-            color: #64748b;
-        }
-        /* 邮件详情弹窗 */
+        .email-subject { font-weight: 600; color: #0f172a; }
+        .email-from { font-size: 0.75rem; color: #475569; margin-top: 4px; }
+        .email-time { font-size: 0.7rem; color: #64748b; white-space: nowrap; }
+        .detail-btn { background: #eef2ff; padding: 6px 14px; border-radius: 30px; font-size: 0.7rem; font-weight: 500; color: #2563eb; cursor: pointer; border: none; }
+        .empty-inbox { text-align: center; padding: 48px 20px; background: #fafcff; border-radius: 1.5rem; color: #64748b; }
         .modal {
             display: none;
             position: fixed;
@@ -226,7 +107,6 @@
             align-items: center;
             justify-content: center;
             z-index: 1000;
-            backdrop-filter: blur(2px);
         }
         .modal-card {
             background: white;
@@ -234,65 +114,33 @@
             width: 540px;
             border-radius: 2rem;
             padding: 1.6rem;
-            box-shadow: 0 30px 40px rgba(0,0,0,0.2);
             max-height: 80vh;
             overflow-y: auto;
         }
-        .modal-card h3 {
-            margin-top: 0;
-            margin-bottom: 0.5rem;
-        }
-        .modal-close {
-            float: right;
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 0 6px;
-            color: #5b6e8c;
-        }
-        .message-body {
-            margin-top: 16px;
-            white-space: pre-wrap;
-            word-break: break-word;
-            background: #f8fafc;
-            padding: 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-        hr {
-            margin: 1rem 0;
-            border: none;
-            border-top: 1px solid #e2e8f0;
-        }
-        footer {
-            font-size: 0.7rem;
-            text-align: center;
-            color: #6c7a91;
-            margin-top: 12px;
-        }
+        .modal-close { float: right; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .message-body { margin-top: 16px; white-space: pre-wrap; background: #f8fafc; padding: 12px; border-radius: 20px; font-size: 0.85rem; }
+        hr { margin: 1rem 0; border: none; border-top: 1px solid #e2e8f0; }
+        footer { font-size: 0.7rem; text-align: center; color: #6c7a91; margin-top: 12px; }
         @media (max-width: 640px) {
             .card { padding: 1.2rem; }
             #emailDisplay { font-size: 1rem; }
-            button { padding: 10px 18px; font-size: 0.85rem;}
+            button { padding: 10px 18px; font-size: 0.85rem; }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- 邮箱操作卡片 -->
     <div class="card email-panel">
         <h1>22.Do 临时邮箱池</h1>
         <div class="sub">✨ 实时生成 · 别名机制 · 即取即用 ✨</div>
-        <div id="emailDisplay">⚡ 加载授权中...</div>
+        <div id="emailDisplay">⚡ 连接代理中...</div>
         <div class="button-group">
             <button id="newEmailBtn">🔄 获取新邮箱 & 复制</button>
             <button id="copyCurrentBtn" class="btn-outline">📋 复制当前邮箱</button>
         </div>
-        <div id="msg">💡 每次点击「获取新邮箱」都会创建全新地址（支持别名特性，确保永不重复）</div>
+        <div id="msg">💡 每次点击都会创建全新地址（支持别名，永不重复）</div>
     </div>
 
-    <!-- 收件箱卡片：自动更新 + 手动刷新 -->
     <div class="card">
         <div class="inbox-header">
             <div class="inbox-title">
@@ -305,13 +153,12 @@
             </div>
         </div>
         <div id="inboxContainer">
-            <div class="empty-inbox">👈 请先点击「获取新邮箱」或等待邮箱加载完毕</div>
+            <div class="empty-inbox">👈 请先点击「获取新邮箱」</div>
         </div>
         <footer>📬 点击任意邮件可查看完整内容 | 新邮件自动轮询同步</footer>
     </div>
 </div>
 
-<!-- 邮件详情模态框 -->
 <div id="messageModal" class="modal">
     <div class="modal-card">
         <button class="modal-close" id="closeModalBtn">&times;</button>
@@ -325,16 +172,14 @@
 </div>
 
 <script>
-    // ----------------------------- 22.Do API 配置 ---------------------------------
-    const API_BASE = 'https://22.do/api/v2';
-    const USER_TOKEN = 'af043d0ba55a2cc262aa1caa489e5920';   // 提供的永久token
-    
-    let bearerToken = null;          // 动态获取的 Bearer
-    let tokenExpireTime = 0;         // 过期时间戳(秒)
-    let currentEmail = '';           // 当前使用的邮箱地址
+    // ==================== 只需要修改这一个地方 ====================
+    const WORKER_URL = 'https://worker-square-feather-bcda.pangdonglai88.workers.dev/';  // 替换成你的 Worker 地址
+    // ============================================================
+
+    let currentEmail = '';
     let autoRefreshInterval = null;
     let autoRefreshEnabled = true;
-    let currentMailList = [];         // 缓存邮件列表用于展示
+    let currentMailList = [];
 
     // DOM 元素
     const emailDisplayDiv = document.getElementById('emailDisplay');
@@ -346,7 +191,6 @@
     const toggleAutoBtn = document.getElementById('toggleAutoRefreshBtn');
     const autoBadge = document.getElementById('autoRefreshBadge');
 
-    // 模态框元素
     const modal = document.getElementById('messageModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const modalSubject = document.getElementById('modalSubject');
@@ -355,7 +199,6 @@
     const modalTime = document.getElementById('modalTime');
     const modalBody = document.getElementById('modalBody');
 
-    // ---------- 辅助函数 ----------
     function setMessage(text, isError = false) {
         msgDiv.textContent = text;
         msgDiv.style.backgroundColor = isError ? '#ffe4e2' : '#e6f7ec';
@@ -375,119 +218,54 @@
             await navigator.clipboard.writeText(text);
             return true;
         } catch {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.top = '-9999px';
-            document.body.appendChild(textarea);
-            textarea.select();
-            const success = document.execCommand('copy');
-            document.body.removeChild(textarea);
-            return success;
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.top = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            return ok;
         }
     }
 
-    // 通用的带 token 的 fetch (自动尝试刷新bearer)
-    async function apiRequest(endpoint, method = 'POST', body = null) {
-        if (!bearerToken) {
-            await fetchBearerToken();
-        }
-        const url = `${API_BASE}${endpoint}`;
-        const headers = {
-            'Authorization': `Bearer ${bearerToken}`,
-            'Content-Type': 'application/json'
-        };
-        const options = { method, headers };
-        if (body) options.body = JSON.stringify(body);
-        
-        let response = await fetch(url, options);
-        // 如果 Unauthorized，尝试刷新 Bearer 再请求一次
-        if (response.status === 401) {
-            console.warn('token expired, refreshing...');
-            await fetchBearerToken();
-            headers.Authorization = `Bearer ${bearerToken}`;
-            options.headers = headers;
-            response = await fetch(url, options);
-        }
+    // 通用请求函数（通过 Worker 代理）
+    async function apiRequest(path, body = {}) {
+        const response = await fetch(WORKER_URL + path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
         const data = await response.json();
         if (!response.ok || data.code !== 200) {
-            throw new Error(data.msg || `API error ${response.status}`);
+            throw new Error(data.msg || `请求失败 (${response.status})`);
         }
         return data;
     }
 
-    // 获取 Bearer token (使用永久token)
-    async function fetchBearerToken() {
-        try {
-            const response = await fetch(`${API_BASE}/token`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: USER_TOKEN })
-            });
-            const result = await response.json();
-            if (!response.ok || result.code !== 200) {
-                throw new Error(result.msg || '获取Bearer失败');
-            }
-            bearerToken = result.data.Bearer;
-            tokenExpireTime = result.data.expireTime;
-            console.log('Bearer token 获取成功, expire:', new Date(tokenExpireTime * 1000));
-            setMessage('✅ API 授权成功，可以领取邮箱', false);
-            return bearerToken;
-        } catch (err) {
-            console.error(err);
-            setMessage(`❌ 认证失败: ${err.message}，请检查网络或API凭证`, true);
-            throw err;
-        }
-    }
-
-    // 获取一个新邮箱 (使用 /account/private 保证私有域名 & 别名机制确保每次不同)
     async function fetchNewEmail() {
-        try {
-            setMessage('🔄 正在创建全新临时邮箱...', false);
-            const result = await apiRequest('/account/private', 'POST', null);
-            const email = result.data?.email;
-            if (!email) throw new Error('返回数据无邮箱地址');
-            // 二次验证域名 (包含我们的域名后缀)
-            if (!email.includes('@')) throw new Error('邮箱格式错误');
-            return email;
-        } catch (err) {
-            console.error('fetchNewEmail error:', err);
-            setMessage(`⚠️ 创建邮箱失败: ${err.message}`, true);
-            throw err;
-        }
+        setMessage('🔄 正在创建全新临时邮箱...', false);
+        const result = await apiRequest('/account/private', {});
+        const email = result.data?.email;
+        if (!email) throw new Error('返回数据无邮箱地址');
+        return email;
     }
 
-    // 获取当前邮箱的收件箱列表
     async function fetchInbox(email) {
         if (!email) return [];
-        try {
-            const result = await apiRequest('/inbox', 'POST', { email, time: null });
-            let messages = result.data || [];
-            if (!Array.isArray(messages)) messages = [];
-            // 按时间倒序排序（最新在上）
-            messages.sort((a,b) => (b.time || 0) - (a.time || 0));
-            return messages;
-        } catch (err) {
-            console.warn('获取收件箱失败:', err);
-            if (err.message.includes('not found') || err.message.includes('404')) {
-                return [];
-            }
-            return [];
-        }
+        const result = await apiRequest('/inbox', { email, time: null });
+        let messages = result.data || [];
+        if (!Array.isArray(messages)) messages = [];
+        messages.sort((a,b) => (b.time || 0) - (a.time || 0));
+        return messages;
     }
 
-    // 获取邮件正文详情
     async function fetchMessageDetail(messageId) {
-        try {
-            const result = await apiRequest('/inbox/message', 'POST', { messageId });
-            return result.data;
-        } catch (err) {
-            console.error('获取详情失败:', err);
-            throw err;
-        }
+        const result = await apiRequest('/inbox/message', { messageId });
+        return result.data;
     }
 
-    // 渲染收件箱 UI
     function renderInbox(messages) {
         if (!messages || messages.length === 0) {
             inboxContainer.innerHTML = `<div class="empty-inbox">📭 暂无邮件，等待新邮件到达将自动显示</div>`;
@@ -509,23 +287,11 @@
             `;
         }).join('');
         inboxContainer.innerHTML = html;
-        // 绑定查看详情事件
         document.querySelectorAll('.detail-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 const messageId = btn.getAttribute('data-id');
                 if (messageId) await showMessageDetail(messageId);
-            });
-        });
-        // 也可以点整行查看
-        document.querySelectorAll('.email-item').forEach(item => {
-            const btnInside = item.querySelector('.detail-btn');
-            if (!btnInside) return;
-            // 避免重复绑定
-            item.addEventListener('click', (e) => {
-                if (e.target.classList?.contains('detail-btn')) return;
-                const id = item.querySelector('.detail-btn')?.getAttribute('data-id');
-                if (id) showMessageDetail(id);
             });
         });
     }
@@ -534,7 +300,6 @@
         try {
             modal.style.display = 'flex';
             modalSubject.innerText = '加载中...';
-            modalBody.innerText = '正在获取邮件内容...';
             const detail = await fetchMessageDetail(messageId);
             modalSubject.innerText = detail.subject || '(无主题)';
             modalFrom.innerText = detail.from || '未知';
@@ -543,10 +308,9 @@
             modalTime.innerText = timeStr;
             let bodyContent = detail.body || detail.html || '无正文内容';
             if (detail.html && !detail.body) {
-                // 简单剥离html标签显示纯文本可读
-                const temp = document.createElement('div');
-                temp.innerHTML = detail.html;
-                bodyContent = temp.innerText || detail.html;
+                const div = document.createElement('div');
+                div.innerHTML = detail.html;
+                bodyContent = div.innerText || detail.html;
             }
             modalBody.innerText = bodyContent;
         } catch (err) {
@@ -554,20 +318,6 @@
         }
     }
 
-    // 辅助防XSS
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
-            return c;
-        });
-    }
-
-    // 刷新当前邮箱的收件箱并更新UI
     async function refreshInbox() {
         if (!currentEmail) {
             inboxContainer.innerHTML = `<div class="empty-inbox">📭 尚未选择邮箱，请先获取新邮箱</div>`;
@@ -577,42 +327,25 @@
             const messages = await fetchInbox(currentEmail);
             currentMailList = messages;
             renderInbox(messages);
-            if (messages.length === 0) {
-                // 没邮件时保留友好提示
-            }
         } catch (err) {
-            console.warn('refresh inbox error', err);
             inboxContainer.innerHTML = `<div class="empty-inbox">⚠️ 收件箱加载失败: ${err.message}</div>`;
         }
     }
 
-    // 切换新邮箱: 获取邮箱 -> 更新全局 -> 复制 -> 刷新收件箱 -> 重置定时器
     async function switchToNewEmail() {
-        if (!bearerToken) {
-            try { await fetchBearerToken(); } catch(e) { return; }
-        }
-        // 防止连续点击
         newEmailBtn.disabled = true;
         const originalText = newEmailBtn.innerText;
         newEmailBtn.innerText = '⏳ 生成中...';
         try {
             const newMail = await fetchNewEmail();
-            if (!newMail) throw new Error('邮箱为空');
             currentEmail = newMail;
             emailDisplayDiv.textContent = currentEmail;
-            // 自动复制到剪贴板
-            const copySuccess = await copyToClipboard(currentEmail);
-            if (copySuccess) {
-                setMessage(`🎉 新邮箱已复制: ${currentEmail} （别名机制保障唯一性）`, false);
-            } else {
-                setMessage(`⚠️ 新邮箱已生成，但复制失败，可手动复制`, false);
-            }
-            // 立即刷新收件箱
+            const copyOk = await copyToClipboard(currentEmail);
+            if (copyOk) setMessage(`🎉 新邮箱已复制: ${currentEmail}`, false);
+            else setMessage(`⚠️ 新邮箱已生成，但复制失败`, false);
             await refreshInbox();
-            // 重置自动刷新计时器 (保持自动刷新活跃)
             resetAutoRefresh();
         } catch (err) {
-            console.error(err);
             setMessage(`❌ 获取邮箱失败: ${err.message}`, true);
             emailDisplayDiv.textContent = '⚠️ 获取失败，请重试';
         } finally {
@@ -622,7 +355,6 @@
         }
     }
 
-    // 复制当前邮箱按钮逻辑
     async function handleCopyCurrent() {
         if (!currentEmail) {
             setMessage('没有可复制的邮箱，请先获取新邮箱', true);
@@ -630,18 +362,15 @@
         }
         const ok = await copyToClipboard(currentEmail);
         if (ok) setMessage(`📋 已复制: ${currentEmail}`, false);
-        else setMessage('复制失败，手动选择复制', true);
+        else setMessage('复制失败', true);
     }
 
-    // 自动刷新逻辑管理
     function startAutoRefresh() {
         if (autoRefreshInterval) clearInterval(autoRefreshInterval);
         if (!autoRefreshEnabled) return;
         autoRefreshInterval = setInterval(async () => {
-            if (currentEmail && autoRefreshEnabled) {
-                await refreshInbox();
-            }
-        }, 10000); // 10秒自动轮询
+            if (currentEmail && autoRefreshEnabled) await refreshInbox();
+        }, 10000);
         autoBadge.innerText = '⚡ 自动刷新中(10s)';
         autoBadge.style.background = '#e6f7ec';
     }
@@ -671,11 +400,10 @@
         } else {
             stopAutoRefresh();
             toggleAutoBtn.innerHTML = '▶️ 开启自动';
-            setMessage('已关闭自动刷新，可手动刷新', false);
+            setMessage('已关闭自动刷新', false);
         }
     }
 
-    // 手动刷新按钮
     async function manualRefresh() {
         if (!currentEmail) {
             setMessage('没有可用邮箱，请先获取邮箱', true);
@@ -686,43 +414,40 @@
         setMessage('✅ 收件箱已更新', false);
     }
 
-    // 初始化页面: 获取Bearer, 自动创建第一个邮箱(让用户无需额外点击)
+    function closeModal() { modal.style.display = 'none'; }
+
     async function init() {
+        // 测试代理连通性（随便发一个请求测试，例如尝试获取第一个邮箱）
         try {
-            await fetchBearerToken();
-            // 首次自动生成一个邮箱，方便直接展示收件箱
             await switchToNewEmail();
         } catch (err) {
-            emailDisplayDiv.textContent = '❌ 授权失败，请刷新页面重试';
+            emailDisplayDiv.textContent = '❌ 代理连接失败，请检查 Worker 地址';
             setMessage(`初始化失败: ${err.message}`, true);
             newEmailBtn.disabled = false;
         }
-        // 启动自动刷新 (默认开启)
         autoRefreshEnabled = true;
         startAutoRefresh();
     }
 
-    // 模态框关闭事件
-    function closeModal() {
-        modal.style.display = 'none';
-    }
-    window.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-    closeModalBtn.addEventListener('click', closeModal);
-
-    // 绑定事件
+    // 事件绑定
     newEmailBtn.addEventListener('click', switchToNewEmail);
     copyCurrentBtn.addEventListener('click', handleCopyCurrent);
     manualRefreshBtn.addEventListener('click', manualRefresh);
     toggleAutoBtn.addEventListener('click', toggleAutoRefresh);
+    window.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    closeModalBtn.addEventListener('click', closeModal);
+    window.addEventListener('beforeunload', () => { if (autoRefreshInterval) clearInterval(autoRefreshInterval); });
 
-    // 页面卸载时停止轮询
-    window.addEventListener('beforeunload', () => {
-        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-    });
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
 
-    // 开始运行
     init();
 </script>
 </body>
