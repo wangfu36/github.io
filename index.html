@@ -3,381 +3,727 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>共享邮箱池 - 实时同步取号</title>
+    <title>22.Do 临时邮箱池 · 实时取号 + 收件箱</title>
     <style>
         * {
             box-sizing: border-box;
-            user-select: none; /* 避免按钮双击选中文字，不影响复制功能 */
+            user-select: none;
         }
         body {
             font-family: system-ui, 'Segoe UI', 'Roboto', 'Noto Sans', sans-serif;
-            text-align: center;
             background: #f1f5f9;
             margin: 0;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            padding: 24px 20px;
         }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        /* 卡片通用样式 */
         .card {
-            max-width: 650px;
-            width: 100%;
             background: white;
-            border-radius: 2rem;
-            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.15);
-            padding: 2rem 1.8rem 2.5rem;
+            border-radius: 1.8rem;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+            padding: 1.6rem 1.8rem 2rem;
             transition: all 0.2s;
         }
+        .email-panel {
+            text-align: center;
+        }
         h1 {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin: 0 0 0.25rem 0;
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: 0 0 0.2rem;
             color: #0f172a;
-            letter-spacing: -0.3px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
         }
-        h1:before {
-            content: "📬";
-            font-size: 1.7rem;
+        h1::before {
+            content: "📧";
+            font-size: 1.8rem;
         }
         .sub {
             color: #475569;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
             border-bottom: 1px solid #e2e8f0;
             display: inline-block;
             padding-bottom: 6px;
         }
         #emailDisplay {
             background: #f8fafc;
-            font-size: 1.6rem;
+            font-size: 1.4rem;
             font-weight: 600;
             font-family: 'SF Mono', 'Fira Code', monospace;
-            margin: 1.2rem 0 1rem;
-            padding: 1.2rem 1rem;
+            margin: 1rem 0 1rem;
+            padding: 1rem 1.2rem;
             border: 2px solid #cbd5e1;
-            border-radius: 28px;
+            border-radius: 60px;
             display: inline-block;
-            min-width: 260px;
             width: 100%;
             word-break: break-all;
             color: #0f172a;
             background: #ffffff;
-            box-shadow: inset 0 1px 3px #00000008, 0 1px 2px #fff;
-            transition: 0.2s;
+            box-shadow: inset 0 1px 2px #00000008, 0 1px 2px #fff;
+        }
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            margin: 12px 0 8px;
         }
         button {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: 600;
-            padding: 14px 28px;
+            padding: 12px 24px;
             cursor: pointer;
             background: #10b981;
             color: white;
             border: none;
             border-radius: 60px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
             transition: 0.2s ease;
-            width: 80%;
-            max-width: 320px;
-            margin-top: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
         }
-        button:active {
-            transform: scale(0.97);
-            background: #059669;
-        }
+        button:active { transform: scale(0.97); }
         button:disabled {
             background: #94a3b8;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
             opacity: 0.7;
+            transform: none;
         }
+        .btn-secondary {
+            background: #3b82f6;
+        }
+        .btn-secondary:active { background: #2563eb; }
+        .btn-outline {
+            background: white;
+            color: #1e293b;
+            border: 1px solid #cbd5e1;
+            box-shadow: none;
+        }
+        .btn-outline:active { background: #f1f5f9; transform: scale(0.97);}
         #msg {
-            margin-top: 24px;
-            font-size: 0.9rem;
-            color: #2c3e66;
+            margin-top: 16px;
+            font-size: 0.85rem;
             background: #eef2ff;
             display: inline-block;
-            padding: 8px 18px;
-            border-radius: 50px;
+            padding: 6px 18px;
+            border-radius: 40px;
             font-weight: 500;
-            max-width: 90%;
+            color: #2c3e66;
         }
-        .status-badge {
-            margin-top: 20px;
-            font-size: 0.75rem;
-            color: #5b6e8c;
-            background: #eef2ff80;
-            padding: 6px 12px;
-            border-radius: 30px;
-            display: inline-flex;
+        /* 收件箱区域 */
+        .inbox-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            margin-bottom: 1.2rem;
+            border-bottom: 2px solid #eef2ff;
+            padding-bottom: 0.75rem;
+        }
+        .inbox-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
         }
-        .status-badge::before {
-            content: "⚡";
+        .inbox-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .refresh-btn {
+            background: #f1f5f9;
+            color: #1e293b;
+            padding: 8px 16px;
             font-size: 0.8rem;
+            box-shadow: none;
+        }
+        .auto-badge {
+            background: #e6f7ec;
+            font-size: 0.7rem;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 500;
+            color: #2b6e3c;
+        }
+        .email-list {
+            max-height: 460px;
+            overflow-y: auto;
+            border-radius: 1rem;
+        }
+        .email-item {
+            background: #fefefe;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.1s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .email-item:hover {
+            background: #fafcff;
+            border-color: #94a3b8;
+        }
+        .email-info {
+            flex: 3;
+            min-width: 180px;
+        }
+        .email-subject {
+            font-weight: 600;
+            color: #0f172a;
+            word-break: break-word;
+        }
+        .email-from {
+            font-size: 0.75rem;
+            color: #475569;
+            margin-top: 4px;
+        }
+        .email-time {
+            font-size: 0.7rem;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .detail-btn {
+            background: #eef2ff;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: #2563eb;
+        }
+        .empty-inbox {
+            text-align: center;
+            padding: 48px 20px;
+            background: #fafcff;
+            border-radius: 1.5rem;
+            color: #64748b;
+        }
+        /* 邮件详情弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+        .modal-card {
+            background: white;
+            max-width: 90%;
+            width: 540px;
+            border-radius: 2rem;
+            padding: 1.6rem;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-card h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+        }
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0 6px;
+            color: #5b6e8c;
+        }
+        .message-body {
+            margin-top: 16px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
         }
         hr {
-            margin: 1.5rem 0 0.5rem;
+            margin: 1rem 0;
             border: none;
             border-top: 1px solid #e2e8f0;
         }
         footer {
             font-size: 0.7rem;
+            text-align: center;
             color: #6c7a91;
-            margin-top: 1rem;
+            margin-top: 12px;
         }
-        @media (max-width: 500px) {
-            .card { padding: 1.5rem; }
-            #emailDisplay { font-size: 1.2rem; padding: 1rem; }
-            button { width: 100%; font-size: 1rem; }
+        @media (max-width: 640px) {
+            .card { padding: 1.2rem; }
+            #emailDisplay { font-size: 1rem; }
+            button { padding: 10px 18px; font-size: 0.85rem;}
         }
     </style>
 </head>
 <body>
-<div class="card">
-    <h1>共享邮箱池</h1>
-    <div class="sub">· 实时同步 · 即取即用 ·</div>
-    <div id="emailDisplay">⚡ 连接中...</div>
-    <br>
-    <button id="copyBtn" disabled>📋 复制并领取下一个</button>
-    <div id="msg">💡 点击按钮自动复制邮箱，并从池中移除</div>
-    <hr />
-    <div class="status-badge">实时数据同步 | 多人取号不重复</div>
-    <footer>每个邮箱仅能被领取一次，刷新页面同步最新池子</footer>
+<div class="container">
+    <!-- 邮箱操作卡片 -->
+    <div class="card email-panel">
+        <h1>22.Do 临时邮箱池</h1>
+        <div class="sub">✨ 实时生成 · 别名机制 · 即取即用 ✨</div>
+        <div id="emailDisplay">⚡ 加载授权中...</div>
+        <div class="button-group">
+            <button id="newEmailBtn">🔄 获取新邮箱 & 复制</button>
+            <button id="copyCurrentBtn" class="btn-outline">📋 复制当前邮箱</button>
+        </div>
+        <div id="msg">💡 每次点击「获取新邮箱」都会创建全新地址（支持别名特性，确保永不重复）</div>
+    </div>
+
+    <!-- 收件箱卡片：自动更新 + 手动刷新 -->
+    <div class="card">
+        <div class="inbox-header">
+            <div class="inbox-title">
+                📥 当前邮箱收件箱
+                <span class="auto-badge" id="autoRefreshBadge">⚡ 自动刷新中(10s)</span>
+            </div>
+            <div class="inbox-actions">
+                <button id="manualRefreshBtn" class="refresh-btn">🔄 手动刷新</button>
+                <button id="toggleAutoRefreshBtn" class="refresh-btn">⏸️ 暂停自动</button>
+            </div>
+        </div>
+        <div id="inboxContainer">
+            <div class="empty-inbox">👈 请先点击「获取新邮箱」或等待邮箱加载完毕</div>
+        </div>
+        <footer>📬 点击任意邮件可查看完整内容 | 新邮件自动轮询同步</footer>
+    </div>
 </div>
 
-<!-- Firebase SDK v10.12.0 模块化 -->
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getDatabase, ref, onValue, runTransaction } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+<!-- 邮件详情模态框 -->
+<div id="messageModal" class="modal">
+    <div class="modal-card">
+        <button class="modal-close" id="closeModalBtn">&times;</button>
+        <h3 id="modalSubject">邮件主题</h3>
+        <div><strong>发件人：</strong> <span id="modalFrom"></span></div>
+        <div><strong>收件人：</strong> <span id="modalTo"></span></div>
+        <div><strong>时间：</strong> <span id="modalTime"></span></div>
+        <hr>
+        <div class="message-body" id="modalBody">加载中...</div>
+    </div>
+</div>
 
-    // ==================== 你的真实 Firebase 配置 (来自我的.txt) ====================
-    const firebaseConfig = {
-        apiKey: "AIzaSyCLUwbTJmVE63YhrbY2g5GzvM1-8ppPXtM",
-        authDomain: "email-aca79.firebaseapp.com",
-        databaseURL: "https://email-aca79-default-rtdb.firebaseio.com",
-        projectId: "email-aca79",
-        storageBucket: "email-aca79.firebasestorage.app",
-        messagingSenderId: "83168551688",
-        appId: "1:83168551688:web:8530dc20569dcdf36102bd",
-        measurementId: "G-EGLZZZ9CWR"
-    };
-    // ============================================================================
+<script>
+    // ----------------------------- 22.Do API 配置 ---------------------------------
+    const API_BASE = 'https://22.do/api/v2';
+    const USER_TOKEN = 'af043d0ba55a2cc262aa1caa489e5920';   // 提供的永久token
+    
+    let bearerToken = null;          // 动态获取的 Bearer
+    let tokenExpireTime = 0;         // 过期时间戳(秒)
+    let currentEmail = '';           // 当前使用的邮箱地址
+    let autoRefreshInterval = null;
+    let autoRefreshEnabled = true;
+    let currentMailList = [];         // 缓存邮件列表用于展示
 
-    // 初始化 Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    // 引用数据库中的邮箱池数组节点 (建议数据库中对应一个数组: emailPool)
-    const poolRef = ref(db, 'emailPool');
-
-    let currentEmail = '';          // 当前展示的第一个邮箱
-    let isProcessing = false;       // 防止快速双击导致重复事务
-
+    // DOM 元素
     const emailDisplayDiv = document.getElementById('emailDisplay');
-    const copyBtn = document.getElementById('copyBtn');
+    const newEmailBtn = document.getElementById('newEmailBtn');
+    const copyCurrentBtn = document.getElementById('copyCurrentBtn');
     const msgDiv = document.getElementById('msg');
+    const inboxContainer = document.getElementById('inboxContainer');
+    const manualRefreshBtn = document.getElementById('manualRefreshBtn');
+    const toggleAutoBtn = document.getElementById('toggleAutoRefreshBtn');
+    const autoBadge = document.getElementById('autoRefreshBadge');
 
-    // 辅助: 优雅复制文本 (兼容移动端)
+    // 模态框元素
+    const modal = document.getElementById('messageModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalSubject = document.getElementById('modalSubject');
+    const modalFrom = document.getElementById('modalFrom');
+    const modalTo = document.getElementById('modalTo');
+    const modalTime = document.getElementById('modalTime');
+    const modalBody = document.getElementById('modalBody');
+
+    // ---------- 辅助函数 ----------
+    function setMessage(text, isError = false) {
+        msgDiv.textContent = text;
+        msgDiv.style.backgroundColor = isError ? '#ffe4e2' : '#e6f7ec';
+        msgDiv.style.color = isError ? '#b91c1c' : '#166534';
+        setTimeout(() => {
+            if (msgDiv.textContent === text && !isError) {
+                msgDiv.textContent = '✅ 就绪，可随时领取新邮箱';
+                msgDiv.style.backgroundColor = '#eef2ff';
+                msgDiv.style.color = '#2c3e66';
+            }
+        }, 3000);
+    }
+
     async function copyToClipboard(text) {
-        // 如果文本为空则不复制
         if (!text) return false;
         try {
             await navigator.clipboard.writeText(text);
             return true;
-        } catch (err) {
-            // 降级方案: textarea
+        } catch {
             const textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.style.position = 'fixed';
             textarea.style.top = '-9999px';
-            textarea.style.left = '-9999px';
             document.body.appendChild(textarea);
             textarea.select();
-            textarea.setSelectionRange(0, 99999);
             const success = document.execCommand('copy');
             document.body.removeChild(textarea);
             return success;
         }
     }
 
-    // 显示临时消息（自动3秒后恢复默认提示，但保留重要错误或成功提示稍长）
-    function setMessage(text, isError = false) {
-        msgDiv.textContent = text;
-        msgDiv.style.backgroundColor = isError ? '#ffe4e2' : '#e6f7ec';
-        msgDiv.style.color = isError ? '#b91c1c' : '#166534';
-        // 3.5秒后若没有新消息覆盖，恢复温和提示但不覆盖最新的重要操作提示（避免误导）
-        setTimeout(() => {
-            // 只当当前消息还是这条旧消息时恢复默认
-            if (msgDiv.textContent === text && !isError) {
-                msgDiv.textContent = '✅ 邮箱就绪，点击领取';
-                msgDiv.style.backgroundColor = '#eef2ff';
-                msgDiv.style.color = '#2c3e66';
-            } else if (msgDiv.textContent === text && isError) {
-                // 错误状态保留稍微久一点但最后还是恢复友好提示
-                setTimeout(() => {
-                    if (msgDiv.textContent === text) {
-                        msgDiv.textContent = '✨ 可继续领取下一个';
-                        msgDiv.style.backgroundColor = '#eef2ff';
-                        msgDiv.style.color = '#2c3e66';
-                    }
-                }, 2000);
-            }
-        }, 3500);
+    // 通用的带 token 的 fetch (自动尝试刷新bearer)
+    async function apiRequest(endpoint, method = 'POST', body = null) {
+        if (!bearerToken) {
+            await fetchBearerToken();
+        }
+        const url = `${API_BASE}${endpoint}`;
+        const headers = {
+            'Authorization': `Bearer ${bearerToken}`,
+            'Content-Type': 'application/json'
+        };
+        const options = { method, headers };
+        if (body) options.body = JSON.stringify(body);
+        
+        let response = await fetch(url, options);
+        // 如果 Unauthorized，尝试刷新 Bearer 再请求一次
+        if (response.status === 401) {
+            console.warn('token expired, refreshing...');
+            await fetchBearerToken();
+            headers.Authorization = `Bearer ${bearerToken}`;
+            options.headers = headers;
+            response = await fetch(url, options);
+        }
+        const data = await response.json();
+        if (!response.ok || data.code !== 200) {
+            throw new Error(data.msg || `API error ${response.status}`);
+        }
+        return data;
     }
 
-    // 更新UI显示当前邮箱 (根据池子第一个元素)
-    function updateDisplayFromPool(emailsArray) {
-        if (!emailsArray || !Array.isArray(emailsArray) || emailsArray.length === 0) {
-            emailDisplayDiv.textContent = '📭 邮箱已用完';
-            copyBtn.disabled = true;
-            currentEmail = '';
-            return;
-        }
-        const firstEmail = emailsArray[0];
-        if (firstEmail && typeof firstEmail === 'string') {
-            currentEmail = firstEmail;
-            emailDisplayDiv.textContent = currentEmail;
-            copyBtn.disabled = false;
-        } else {
-            // 防御：如果数组元素不是合法字符串，尝试修复或提示
-            console.warn('邮箱池数据异常', emailsArray);
-            emailDisplayDiv.textContent = '⚠️ 数据格式错误';
-            copyBtn.disabled = true;
-            currentEmail = '';
-        }
-    }
-
-    // 实时监听 Firebase 邮箱池的变化 (多人同步)
-    onValue(poolRef, (snapshot) => {
-        const emails = snapshot.val();
-        // 处理可能的数据格式: 如果是 null 或非数组，统一转为空数组
-        let emailList = [];
-        if (emails && Array.isArray(emails)) {
-            emailList = emails;
-        } else if (emails && typeof emails === 'object') {
-            // 极少数情况下如果存储成对象 {0:'xx',1:'yy'} 转为数组
-            emailList = Object.values(emails).filter(v => typeof v === 'string');
-        } else {
-            emailList = [];
-        }
-        // 更新界面
-        updateDisplayFromPool(emailList);
-        
-        // 如果没有邮箱了给出提示
-        if (emailList.length === 0) {
-            setMessage('⚠️ 邮箱池已空，请联系管理员补充', false);
-        } else {
-            // 不覆盖关键操作消息，仅在非忙碌时显示常规就绪消息
-            if (!isProcessing) {
-                setMessage('📋 点击按钮复制邮箱并自动移除', false);
-            }
-        }
-    });
-
-    // 点击领取: 复制当前邮箱 + 事务移除数组第一个元素
-    copyBtn.addEventListener('click', async () => {
-        // 防止并发点击，避免双倍移除 / 错误复制
-        if (isProcessing) {
-            setMessage('⏳ 操作中，请稍后...', false);
-            return;
-        }
-        if (!currentEmail) {
-            setMessage('❌ 当前没有可用邮箱，请刷新或等待补充', true);
-            return;
-        }
-        if (copyBtn.disabled) {
-            setMessage('⛔ 邮箱不可用，请稍后', true);
-            return;
-        }
-
-        isProcessing = true;
-        // 临时禁用按钮避免重复请求，视觉反馈
-        copyBtn.disabled = true;
-        const originalBtnText = copyBtn.innerText;
-        copyBtn.innerText = '⏳ 处理中...';
-
-        // 1. 先复制邮箱到剪贴板（复制当前展示的邮箱）
-        const copySuccess = await copyToClipboard(currentEmail);
-        if (!copySuccess) {
-            setMessage('⚠️ 复制失败，可手动复制邮箱', true);
-            // 复制失败仍然继续移除？为了数据一致性，我们让用户手动刷新？不行，为了避免重复领取问题，如果复制失败就不删除邮箱
-            // 但更好的交互：复制失败就不进行删除，让用户再试一次
-            copyBtn.disabled = false;
-            copyBtn.innerText = originalBtnText;
-            isProcessing = false;
-            return;
-        }
-
-        // 复制成功, 显示短暂反馈
-        setMessage(`✅ 已复制: ${currentEmail} ，正在从池中移除此邮箱...`, false);
-        
-        // 2. 使用事务安全删除第一个邮箱 (移除数组头部)
+    // 获取 Bearer token (使用永久token)
+    async function fetchBearerToken() {
         try {
-            await runTransaction(poolRef, (currentData) => {
-                let emailsList = [];
-                // 处理当前快照数据格式
-                if (currentData && Array.isArray(currentData)) {
-                    emailsList = [...currentData];
-                } else if (currentData && typeof currentData === 'object') {
-                    emailsList = Object.values(currentData).filter(v => typeof v === 'string');
-                } else {
-                    emailsList = [];
-                }
-                
-                if (emailsList.length === 0) {
-                    // 池子已经为空，返回不变
-                    return [];
-                }
-                // 移除第一个邮箱（正是复制的那个）
-                emailsList.shift();
-                return emailsList;
-            }).then((result) => {
-                // 事务提交成功，但需要检查是否被中断
-                if (result.committed) {
-                    setMessage(`🎉 成功！已领取 ${currentEmail}，下一个邮箱自动就位`, false);
-                } else {
-                    // 极少情况: 事务被拒绝（比如数据同时被他人修改导致重试失败），不过一般会自动重试
-                    setMessage(`⚠️ 操作冲突，邮箱可能已被其他人领取，刷新后查看最新池子`, true);
-                }
-                // 不论committed与否，重置状态。但注意因为 onValue 会同步最新数据，界面已更新
+            const response = await fetch(`${API_BASE}/token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: USER_TOKEN })
             });
-        } catch (error) {
-            console.error('事务删除异常:', error);
-            setMessage(`❌ 服务器错误: ${error.message || '请检查网络或刷新重试'}`, true);
-        } finally {
-            // 重置按钮状态，但注意此时currentEmail可能会因为 onValue 回调变化。
-            // 为了用户体验，延迟一小段时间再启用按钮，防止快速点击
-            setTimeout(() => {
-                // 再次检查当前池子是否还有内容决定按钮是否启用
-                if (currentEmail) {
-                    copyBtn.disabled = false;
-                } else {
-                    copyBtn.disabled = true;
-                }
-                copyBtn.innerText = '📋 复制并领取下一个';
-                isProcessing = false;
-            }, 600);
+            const result = await response.json();
+            if (!response.ok || result.code !== 200) {
+                throw new Error(result.msg || '获取Bearer失败');
+            }
+            bearerToken = result.data.Bearer;
+            tokenExpireTime = result.data.expireTime;
+            console.log('Bearer token 获取成功, expire:', new Date(tokenExpireTime * 1000));
+            setMessage('✅ API 授权成功，可以领取邮箱', false);
+            return bearerToken;
+        } catch (err) {
+            console.error(err);
+            setMessage(`❌ 认证失败: ${err.message}，请检查网络或API凭证`, true);
+            throw err;
         }
+    }
+
+    // 获取一个新邮箱 (使用 /account/private 保证私有域名 & 别名机制确保每次不同)
+    async function fetchNewEmail() {
+        try {
+            setMessage('🔄 正在创建全新临时邮箱...', false);
+            const result = await apiRequest('/account/private', 'POST', null);
+            const email = result.data?.email;
+            if (!email) throw new Error('返回数据无邮箱地址');
+            // 二次验证域名 (包含我们的域名后缀)
+            if (!email.includes('@')) throw new Error('邮箱格式错误');
+            return email;
+        } catch (err) {
+            console.error('fetchNewEmail error:', err);
+            setMessage(`⚠️ 创建邮箱失败: ${err.message}`, true);
+            throw err;
+        }
+    }
+
+    // 获取当前邮箱的收件箱列表
+    async function fetchInbox(email) {
+        if (!email) return [];
+        try {
+            const result = await apiRequest('/inbox', 'POST', { email, time: null });
+            let messages = result.data || [];
+            if (!Array.isArray(messages)) messages = [];
+            // 按时间倒序排序（最新在上）
+            messages.sort((a,b) => (b.time || 0) - (a.time || 0));
+            return messages;
+        } catch (err) {
+            console.warn('获取收件箱失败:', err);
+            if (err.message.includes('not found') || err.message.includes('404')) {
+                return [];
+            }
+            return [];
+        }
+    }
+
+    // 获取邮件正文详情
+    async function fetchMessageDetail(messageId) {
+        try {
+            const result = await apiRequest('/inbox/message', 'POST', { messageId });
+            return result.data;
+        } catch (err) {
+            console.error('获取详情失败:', err);
+            throw err;
+        }
+    }
+
+    // 渲染收件箱 UI
+    function renderInbox(messages) {
+        if (!messages || messages.length === 0) {
+            inboxContainer.innerHTML = `<div class="empty-inbox">📭 暂无邮件，等待新邮件到达将自动显示</div>`;
+            return;
+        }
+        const html = messages.map(msg => {
+            const timeStr = msg.time ? new Date(msg.time * 1000).toLocaleString() : '未知时间';
+            const subject = msg.subject || '(无主题)';
+            const from = msg.from || '未知发件人';
+            return `
+                <div class="email-item" data-message-id="${msg.messageId}">
+                    <div class="email-info">
+                        <div class="email-subject">${escapeHtml(subject)}</div>
+                        <div class="email-from">📨 ${escapeHtml(from)}</div>
+                    </div>
+                    <div class="email-time">${escapeHtml(timeStr)}</div>
+                    <button class="detail-btn" data-id="${msg.messageId}">查看详情</button>
+                </div>
+            `;
+        }).join('');
+        inboxContainer.innerHTML = html;
+        // 绑定查看详情事件
+        document.querySelectorAll('.detail-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const messageId = btn.getAttribute('data-id');
+                if (messageId) await showMessageDetail(messageId);
+            });
+        });
+        // 也可以点整行查看
+        document.querySelectorAll('.email-item').forEach(item => {
+            const btnInside = item.querySelector('.detail-btn');
+            if (!btnInside) return;
+            // 避免重复绑定
+            item.addEventListener('click', (e) => {
+                if (e.target.classList?.contains('detail-btn')) return;
+                const id = item.querySelector('.detail-btn')?.getAttribute('data-id');
+                if (id) showMessageDetail(id);
+            });
+        });
+    }
+
+    async function showMessageDetail(messageId) {
+        try {
+            modal.style.display = 'flex';
+            modalSubject.innerText = '加载中...';
+            modalBody.innerText = '正在获取邮件内容...';
+            const detail = await fetchMessageDetail(messageId);
+            modalSubject.innerText = detail.subject || '(无主题)';
+            modalFrom.innerText = detail.from || '未知';
+            modalTo.innerText = detail.to || (detail.tos ? detail.tos.join(', ') : '未知');
+            const timeStr = detail.time ? new Date(detail.time * 1000).toLocaleString() : '未知';
+            modalTime.innerText = timeStr;
+            let bodyContent = detail.body || detail.html || '无正文内容';
+            if (detail.html && !detail.body) {
+                // 简单剥离html标签显示纯文本可读
+                const temp = document.createElement('div');
+                temp.innerHTML = detail.html;
+                bodyContent = temp.innerText || detail.html;
+            }
+            modalBody.innerText = bodyContent;
+        } catch (err) {
+            modalBody.innerText = `加载失败: ${err.message}`;
+        }
+    }
+
+    // 辅助防XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+            return c;
+        });
+    }
+
+    // 刷新当前邮箱的收件箱并更新UI
+    async function refreshInbox() {
+        if (!currentEmail) {
+            inboxContainer.innerHTML = `<div class="empty-inbox">📭 尚未选择邮箱，请先获取新邮箱</div>`;
+            return;
+        }
+        try {
+            const messages = await fetchInbox(currentEmail);
+            currentMailList = messages;
+            renderInbox(messages);
+            if (messages.length === 0) {
+                // 没邮件时保留友好提示
+            }
+        } catch (err) {
+            console.warn('refresh inbox error', err);
+            inboxContainer.innerHTML = `<div class="empty-inbox">⚠️ 收件箱加载失败: ${err.message}</div>`;
+        }
+    }
+
+    // 切换新邮箱: 获取邮箱 -> 更新全局 -> 复制 -> 刷新收件箱 -> 重置定时器
+    async function switchToNewEmail() {
+        if (!bearerToken) {
+            try { await fetchBearerToken(); } catch(e) { return; }
+        }
+        // 防止连续点击
+        newEmailBtn.disabled = true;
+        const originalText = newEmailBtn.innerText;
+        newEmailBtn.innerText = '⏳ 生成中...';
+        try {
+            const newMail = await fetchNewEmail();
+            if (!newMail) throw new Error('邮箱为空');
+            currentEmail = newMail;
+            emailDisplayDiv.textContent = currentEmail;
+            // 自动复制到剪贴板
+            const copySuccess = await copyToClipboard(currentEmail);
+            if (copySuccess) {
+                setMessage(`🎉 新邮箱已复制: ${currentEmail} （别名机制保障唯一性）`, false);
+            } else {
+                setMessage(`⚠️ 新邮箱已生成，但复制失败，可手动复制`, false);
+            }
+            // 立即刷新收件箱
+            await refreshInbox();
+            // 重置自动刷新计时器 (保持自动刷新活跃)
+            resetAutoRefresh();
+        } catch (err) {
+            console.error(err);
+            setMessage(`❌ 获取邮箱失败: ${err.message}`, true);
+            emailDisplayDiv.textContent = '⚠️ 获取失败，请重试';
+        } finally {
+            newEmailBtn.disabled = false;
+            newEmailBtn.innerText = originalText;
+            copyCurrentBtn.disabled = !currentEmail;
+        }
+    }
+
+    // 复制当前邮箱按钮逻辑
+    async function handleCopyCurrent() {
+        if (!currentEmail) {
+            setMessage('没有可复制的邮箱，请先获取新邮箱', true);
+            return;
+        }
+        const ok = await copyToClipboard(currentEmail);
+        if (ok) setMessage(`📋 已复制: ${currentEmail}`, false);
+        else setMessage('复制失败，手动选择复制', true);
+    }
+
+    // 自动刷新逻辑管理
+    function startAutoRefresh() {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+        if (!autoRefreshEnabled) return;
+        autoRefreshInterval = setInterval(async () => {
+            if (currentEmail && autoRefreshEnabled) {
+                await refreshInbox();
+            }
+        }, 10000); // 10秒自动轮询
+        autoBadge.innerText = '⚡ 自动刷新中(10s)';
+        autoBadge.style.background = '#e6f7ec';
+    }
+
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+        autoBadge.innerText = '⏸️ 自动已暂停';
+        autoBadge.style.background = '#f1f5f9';
+    }
+
+    function resetAutoRefresh() {
+        if (autoRefreshEnabled) {
+            stopAutoRefresh();
+            startAutoRefresh();
+        }
+    }
+
+    function toggleAutoRefresh() {
+        autoRefreshEnabled = !autoRefreshEnabled;
+        if (autoRefreshEnabled) {
+            startAutoRefresh();
+            toggleAutoBtn.innerHTML = '⏸️ 暂停自动';
+            setMessage('已开启自动刷新收件箱 (10秒)', false);
+        } else {
+            stopAutoRefresh();
+            toggleAutoBtn.innerHTML = '▶️ 开启自动';
+            setMessage('已关闭自动刷新，可手动刷新', false);
+        }
+    }
+
+    // 手动刷新按钮
+    async function manualRefresh() {
+        if (!currentEmail) {
+            setMessage('没有可用邮箱，请先获取邮箱', true);
+            return;
+        }
+        setMessage('🔄 手动刷新收件箱...', false);
+        await refreshInbox();
+        setMessage('✅ 收件箱已更新', false);
+    }
+
+    // 初始化页面: 获取Bearer, 自动创建第一个邮箱(让用户无需额外点击)
+    async function init() {
+        try {
+            await fetchBearerToken();
+            // 首次自动生成一个邮箱，方便直接展示收件箱
+            await switchToNewEmail();
+        } catch (err) {
+            emailDisplayDiv.textContent = '❌ 授权失败，请刷新页面重试';
+            setMessage(`初始化失败: ${err.message}`, true);
+            newEmailBtn.disabled = false;
+        }
+        // 启动自动刷新 (默认开启)
+        autoRefreshEnabled = true;
+        startAutoRefresh();
+    }
+
+    // 模态框关闭事件
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+    closeModalBtn.addEventListener('click', closeModal);
+
+    // 绑定事件
+    newEmailBtn.addEventListener('click', switchToNewEmail);
+    copyCurrentBtn.addEventListener('click', handleCopyCurrent);
+    manualRefreshBtn.addEventListener('click', manualRefresh);
+    toggleAutoBtn.addEventListener('click', toggleAutoRefresh);
+
+    // 页面卸载时停止轮询
+    window.addEventListener('beforeunload', () => {
+        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
     });
 
-    // 附加： 监听页面显示/隐藏时不做额外动作，但保证实时性
-    window.addEventListener('load', () => {
-        // 初始加载，显示连接提示
-        setMessage('🔄 同步邮箱池中...', false);
-        // 2秒后若未更新可显示
-        setTimeout(() => {
-            if (currentEmail === '' && copyBtn.disabled !== false) {
-                // 尚未加载到数据
-                setMessage('⏳ 等待数据同步，若长时间无反应请检查网络或数据库', false);
-            }
-        }, 2000);
-    });
+    // 开始运行
+    init();
 </script>
 </body>
 </html>
